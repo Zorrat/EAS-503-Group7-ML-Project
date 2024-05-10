@@ -42,10 +42,12 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS SalesData (
 with open('datasets/VideoGamesSalesCleaned.csv', 'r', newline='', encoding='utf-8') as file:
     reader = csv.DictReader(file)
     platform_set = set()
+    genre_set = set()
     score_data = []
     sales_data = []
     for row in reader:
         platform_set.add(row['Platform'])
+        genre_set.add(row['Genre'])
         score_data.append((row['Name'], row['User_Score']))
         sales_data.append((row['Name'], row['Platform'], row['Year_of_Release'], row['Genre'], row['Publisher'],
                            row['NA_Sales'], row['EU_Sales'], row['JP_Sales'], row['Other_Sales'], row['Global_Sales'],
@@ -54,6 +56,10 @@ with open('datasets/VideoGamesSalesCleaned.csv', 'r', newline='', encoding='utf-
 # Insert Platform data
 platform_values = [(platform,) for platform in platform_set]
 cursor.executemany("INSERT INTO Platform (Platform) VALUES (?)", platform_values)
+
+# Insert Genre data
+genre_values = [(genre,) for genre in genre_set]
+cursor.executemany("INSERT INTO Genre (Genre) VALUES (?)", genre_values)
 
 # Insert Score data
 cursor.executemany("INSERT INTO Score (Name, User_Score) VALUES (?, ?)", score_data)
