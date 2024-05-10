@@ -11,9 +11,13 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS Platform (
                     Platform TEXT
                 )''')
 
+cursor.execute('''CREATE TABLE IF NOT EXISTS Genre (
+                    GID INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Genre TEXT
+                )''')
+
 cursor.execute('''CREATE TABLE IF NOT EXISTS Score (
                     Name TEXT PRIMARY KEY,
-                    Critic_Score REAL,
                     User_Score REAL,
                     FOREIGN KEY (Name) REFERENCES SalesData(Name)
                 )''')
@@ -42,7 +46,7 @@ with open('datasets/VideoGamesSalesCleaned.csv', 'r', newline='', encoding='utf-
     sales_data = []
     for row in reader:
         platform_set.add(row['Platform'])
-        score_data.append((row['Name'], row['Critic_Score'], row['User_Score']))
+        score_data.append((row['Name'], row['User_Score']))
         sales_data.append((row['Name'], row['Platform'], row['Year_of_Release'], row['Genre'], row['Publisher'],
                            row['NA_Sales'], row['EU_Sales'], row['JP_Sales'], row['Other_Sales'], row['Global_Sales'],
                            row['Developer'], row['Rating']))
@@ -52,7 +56,7 @@ platform_values = [(platform,) for platform in platform_set]
 cursor.executemany("INSERT INTO Platform (Platform) VALUES (?)", platform_values)
 
 # Insert Score data
-cursor.executemany("INSERT INTO Score (Name, Critic_Score, User_Score) VALUES (?, ?, ?)", score_data)
+cursor.executemany("INSERT INTO Score (Name, User_Score) VALUES (?, ?)", score_data)
 
 # Insert SalesData
 cursor.executemany('''INSERT INTO SalesData (Name, Platform, Year_of_Release, Genre, Publisher, NA_Sales, EU_Sales,
