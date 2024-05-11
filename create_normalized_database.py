@@ -6,68 +6,56 @@ conn = sqlite3.connect('videogamessales.db')
 cursor = conn.cursor()
 
 # Create tables
-cursor.execute('''CREATE TABLE IF NOT EXISTS Platform (
-                    PFID INTEGER PRIMARY KEY AUTOINCREMENT,
-                    Platform TEXT
-                )''')
-
-cursor.execute('''CREATE TABLE IF NOT EXISTS Genre (
-                    GID INTEGER PRIMARY KEY AUTOINCREMENT,
-                    Genre TEXT
-                )''')
-
-cursor.execute('''CREATE TABLE IF NOT EXISTS Score (
-                    Name TEXT PRIMARY KEY,
-                    User_Score REAL,
-                    FOREIGN KEY (Name) REFERENCES SalesData(Name)
-                )''')
-
-cursor.execute('''CREATE TABLE IF NOT EXISTS SalesData (
+# Create Games table
+conn.execute('''CREATE TABLE IF NOT EXISTS Games (
                     Name TEXT PRIMARY KEY,
                     Platform TEXT,
-                    Year_of_Release INTEGER,
+                    Year_of_Release REAL,
                     Genre TEXT,
                     Publisher TEXT,
+                    Rating TEXT
+                    )''')
+
+    # Create Sales table
+conn.execute('''CREATE TABLE IF NOT EXISTS Sales (
+                    Name TEXT,
                     NA_Sales REAL,
                     EU_Sales REAL,
                     JP_Sales REAL,
                     Other_Sales REAL,
                     Global_Sales REAL,
-                    Developer TEXT,
-                    Rating TEXT,
-                    FOREIGN KEY (Platform) REFERENCES Platform(Platform)
-                )''')
+                    PRIMARY KEY (Name, NA_Sales, EU_Sales, JP_Sales, Other_Sales, Global_Sales),
+                    FOREIGN KEY (Name) REFERENCES Games(Name)
+                    )''')
 
-# Read data from CSV and insert into tables
+    # Create User_Reviews table
+conn.execute('''CREATE TABLE IF NOT EXISTS User_Reviews (
+                    Name TEXT PRIMARY KEY,
+                    User_Score REAL,
+                    User_Count REAL,
+                    FOREIGN KEY (Name) REFERENCES Games(Name)
+                    )''')
+
 with open('datasets/VideoGamesSalesCleaned.csv', 'r', newline='', encoding='utf-8') as file:
     reader = csv.DictReader(file)
-    platform_set = set()
-    genre_set = set()
-    score_data = []
+    games_data = []
     sales_data = []
+    user_reviews_data = []
     for row in reader:
-        platform_set.add(row['Platform'])
-        genre_set.add(row['Genre'])
-        score_data.append((row['Name'], row['User_Score']))
-        sales_data.append((row['Name'], row['Platform'], row['Year_of_Release'], row['Genre'], row['Publisher'],
-                           row['NA_Sales'], row['EU_Sales'], row['JP_Sales'], row['Other_Sales'], row['Global_Sales'],
-                           row['Developer'], row['Rating']))
+        games_data.append((row['Name'], row['Platform'], row['Year_of_Release'], row['Genre'], row['Publisher'], row['Rating']))
+        sales_data.append((row['Name'], row['NA_Sales'], row['EU_Sales'], row['JP_Sales'], row['Other_Sales'], row['Global_Sales']))
+        user_reviews_data.append((row['Name'], row['User_Score'], row['User_Count']))
 
-# Insert Platform data
-platform_values = [(platform,) for platform in platform_set]
-cursor.executemany("INSERT INTO Platform (Platform) VALUES (?)", platform_values)
+# Insert Games data
+cursor.executemany('''INSERT INTO Games (Name, Platform, Year_of_Release, Genre, Publisher, Rating) 
+                    VALUES (?, ?, ?, ?, ?, ?)''', games_data)
 
-# Insert Genre data
-genre_values = [(genre,) for genre in genre_set]
-cursor.executemany("INSERT INTO Genre (Genre) VALUES (?)", genre_values)
+# Insert Sales data
+cursor.executemany('''INSERT INTO Sales (Name, NA_Sales, EU_Sales, JP_Sales, Other_Sales, Global_Sales) VALUES (?, ?, ?, ?, ?, ?)''', sales_data)
 
-# Insert Score data
-cursor.executemany("INSERT INTO Score (Name, User_Score) VALUES (?, ?)", score_data)
-
-# Insert SalesData
-cursor.executemany('''INSERT INTO SalesData (Name, Platform, Year_of_Release, Genre, Publisher, NA_Sales, EU_Sales,
-                    JP_Sales, Other_Sales, Global_Sales, Developer, Rating) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                    sales_data)
+# Insert User Reviews data
+cursor.executemany('''INSERT INTO User_Reviews (Name, User_Score, User_Count) VALUES (?, ?, ?)''',
+                    user_reviews_data)
 
 # Commit changes and close connection
 conn.commit()
