@@ -6,10 +6,6 @@ from pydantic import BaseModel
 import pandas as pd
 import numpy as np
 import os
-
-print("-->",os.getcwd())
-print("-->",os.listdir())
-
 with open('rfr_model.pkl', 'rb') as f:
     rfr_model = load(f)
 
