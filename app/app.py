@@ -35,7 +35,6 @@ def predict(payload: Payload):
     y_pred = rfr_model.predict(df)
     response = {
         'prediction': y_pred[0],
-        'model_name': 'rfr_model_v1',
-        'model_last_updated': '2024-05-16',
+        'model_name': 'Random Forest Regressor',
     }
     return response
